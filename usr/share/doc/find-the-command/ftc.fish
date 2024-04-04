@@ -39,15 +39,15 @@ for opt in $argv
 end
 
 function _cnf_pacman_db_path
-    set db_path (sed -n '/^DBPath[[:space:]]*=/{s/^[^=]*=[[:space:]]*\(.*[^[:space:]]\)[[:space:]]*/\1/p;q}' /etc/pacman.conf)
+    set db_path (sed -n '/^DBPath[[:space:]]*=/{s/^[^=]*=[[:space:]]*\(.*[^[:space:]]\)[[:space:]]*/\1/p;q}' "$PREFIX/etc/pacman.conf")
     if test -z "$db_path"
-        set db_path /var/lib/pacman
+        set db_path (pacman-conf DBPath)
     end
     echo "$db_path/sync"
 end
 
 function _cnf_asroot
-    if test (id -u) -ne 0
+    if test (id -u) -ne 0 -a not set -q TERMUX_APP__UID
         if $_cnf_force_su
             su -c "$argv"
         else
@@ -87,8 +87,8 @@ else
         if test (find "$dir" -type f -maxdepth 2 -name "*.files" 2>/dev/null | wc -l) -eq 0
             set old_files all
         else
-            set newest_files (/usr/bin/ls -t "$dir"/*.files | head -n 1)
-            set newest_pacman_db (/usr/bin/ls -t "$db_path"/*.db | head -n 1)
+            set newest_files (command ls -t "$dir"/*.files | head -n 1)
+            set newest_pacman_db (command ls -t "$db_path"/*.db | head -n 1)
             set old_files (find "$newest_pacman_db" -newer "$newest_files")
         end
         if test -n "$old_files"
@@ -183,11 +183,11 @@ if $_cnf_noprompt
 else
 # With installation prompt (default)
     function _cnf_check_fzf
-        if ! which fzf >/dev/null 2>/dev/null
+        if ! type -fP fzf >/dev/null 2>/dev/null
             if _cnf_prompt_yn "Gathering input requires 'fzf', install it?"
                 _cnf_asroot pacman -S fzf
             end
-            if ! which fzf >/dev/null 2>/dev/null
+            if ! type -fP fzf >/dev/null 2>/dev/null
                 return 1
             end
         end
@@ -220,7 +220,7 @@ else
                         set package_files (_cnf_package_files "$packages" | string collect)
                         set package_info (pacman -Si "$packages" | string collect)
                         set action (printf "%s\n" $_cnf_actions | \
-                            fzf --preview "echo {} | grep -q '^list' && echo '$package_files' \
+                            fzf --preview-window=up,70% --preview "echo {} | grep -q '^list' && echo '$package_files' \
                                     || echo '$package_info'" \
                                 --prompt "Action (\"esc\" to abort):" \
                                 --header "$may_be_found
@@ -259,6 +259,7 @@ $scroll_header")
                         fzf --bind="tab:preview(type pkgfile >/dev/null 2>/dev/null && \
                                 pkgfile --list {} | sed 's/[^[:space:]]*[[:space:]]*//' || \
                                 pacman -Flq {})" \
+                            --preview-window=up,70% \
                             --preview "pacman -Si {}" \
                             --header "Press \"tab\" to view files
 $scroll_header" \
