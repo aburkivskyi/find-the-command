@@ -29,16 +29,16 @@ do
 done
 
 _cnf_pacman_db_path() {
-    local db_path=$(sed -n '/^DBPath[[:space:]]*=/{s/^[^=]*=[[:space:]]*\(.*[^[:space:]]\)[[:space:]]*/\1/p;q}' /etc/pacman.conf)
+    local db_path=$(sed -n '/^DBPath[[:space:]]*=/{s/^[^=]*=[[:space:]]*\(.*[^[:space:]]\)[[:space:]]*/\1/p;q}' ${PREFIX-}/etc/pacman.conf)
     if test -z "$db_path"
     then
-        db_path=/var/lib/pacman
+        db_path=${PREFIX-}/var/lib/pacman
     fi
     echo "$db_path/sync"
 }
 
 _cnf_asroot() {
-    if test $EUID -ne 0
+    if [[ $EUID -ne 0 ]] && [[ -z "$TERMUX_APP__PID" ]]
     then
         if $_cnf_force_su
         then
@@ -87,8 +87,8 @@ else
         then
             old_files=all
         else
-            local newest_files=$(/usr/bin/ls -t "$dir"/*.files | head -n 1)
-            local newest_pacman_db=$(/usr/bin/ls -t "$db_path"/*.db | head -n 1)
+            local newest_files=$(command ls -t "$dir"/*.files | head -n 1)
+            local newest_pacman_db=$(command ls -t "$db_path"/*.db | head -n 1)
             old_files=$(find "$newest_pacman_db" -newer "$newest_files")
         fi
         if test -n "$old_files"
@@ -102,12 +102,12 @@ fi
 
 _cnf_command_packages() {
     local cmd=$1
-    if type pkgfile >/dev/null 2>/dev/null
+    if command -v pkgfile >/dev/null 2>/dev/null
     then
         local cache=$(pkgfile --help | sed -n 's/.*--cachedir.*default:[[:space:]]*\(.*\))$/\1/p')
         if test -z "$cache"
         then
-            cache=/var/cache/pkgfile
+            cache=${PREFIX-}/var/cache/pkgfile
         fi
 
         if _cnf_need_to_update_files "$cache"
@@ -127,13 +127,13 @@ _cnf_command_packages() {
         then
             _cnf_asroot pacman -Fy >&2
         fi
-        pacman $args "/usr/bin/$cmd" 2>/dev/null
+        pacman $args "${PREFIX:-/usr}/bin/$cmd" 2>/dev/null
     fi
 }
 
 _cnf_package_files() {
     local package=$1
-    if type pkgfile >/dev/null 2>/dev/null
+    if command -v pkgfile >/dev/null 2>/dev/null
     then
         pkgfile --list "$package" | sed 's/[^[:space:]]*[[:space:]]*//'
     else
@@ -219,12 +219,12 @@ else
                 then
                     local may_be_found="\"$cmd\" may be found in package \"$packages\""
                     _cnf_print "find-the-command: $may_be_found"
-                    if which fzf >/dev/null 2>/dev/null
+                    if command -v fzf >/dev/null 2>/dev/null
                     then
                         local package_files=$(_cnf_package_files "$packages")
                         local package_info=$(pacman -Si "$packages")
                         action=$(printf "%s\n" "${_cnf_actions[@]}" | \
-                            fzf --preview "echo {} | grep -q '^list' && echo '$package_files' \
+                            fzf --preview-window="up,70%" --preview "echo {} | grep -q '^list' && echo '$package_files' \
                                     || echo '$package_info'" \
                                 --prompt "Action (\"esc\" to abort):" \
                                 --header "$may_be_found
@@ -265,7 +265,7 @@ $scroll_header")
             *)
                 local package
                 _cnf_print "find-the-command: \"$cmd\" may be found in the following packages:"
-                if which fzf >/dev/null 2>/dev/null
+                if command -v fzf >/dev/null 2>/dev/null
                 then
                     for package in $(echo $packages)
                     do
@@ -275,6 +275,7 @@ $scroll_header")
                         fzf --bind="tab:preview(type pkgfile >/dev/null 2>/dev/null && \
                                 pkgfile --list {} | sed 's/[^[:space:]]*[[:space:]]*//' || \
                                 pacman -Flq {})" \
+                            --preview-window="up,70%" \
                             --preview "pacman -Si {}" \
                             --header "Press \"tab\" to view files
 $scroll_header" \
