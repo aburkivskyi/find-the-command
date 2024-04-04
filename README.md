@@ -20,6 +20,10 @@ To enable it, you need to source needed file from `/usr/share/doc/find-the-comma
 
 	source /usr/share/doc/find-the-command/ftc.zsh
 
+or for a [Termux](https://termux.dev)
+
+	source $PREFIX/share/doc/find-the-command/ftc.zsh
+
 You can also append some options when sourcing file to customize your experience.
 
 | Option              | Description                                                                     | Bash | Zsh | Fish |
@@ -37,6 +41,10 @@ You can also append some options when sourcing file to customize your experience
 For example:
 
 	source /usr/share/doc/find-the-command/ftc.zsh quiet su
+
+or for the [Termux](https://termux.dev)
+
+	source $PREFIX/share/doc/find-the-command/ftc.zsh quiet noprompt
 
 Searching for commands requires pacman or pkgfile files database. This is detected automatically by the find-the-command functions and will ask you to update when it is necessary. If you wish to run the command manually
 
