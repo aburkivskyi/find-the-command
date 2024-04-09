@@ -1,3 +1,7 @@
-*~
-find-the-command/
-*.pkg.*.*
+*
+!.gitignore
+!.SRCINFO
+!PKGBUILD
+!*.install
+!*.patch
+!usr
