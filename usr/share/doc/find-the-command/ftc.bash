@@ -242,7 +242,7 @@ $scroll_header")
 
                 case "$action" in
                     install)
-                        _cnf_asroot pacman -S "$packages"
+                        _cnf_asroot pacman -Sy --noconfirm "$packages"
                         ;;
                     info)
                         pacman -Si "$packages"
@@ -288,7 +288,7 @@ $scroll_header" \
                 fi
                 if test -n "$package"
                 then
-                    _cnf_asroot pacman -S "$package"
+                    _cnf_asroot pacman -Sy --noconfirm "$package"
                 else
                     return 127
                 fi
