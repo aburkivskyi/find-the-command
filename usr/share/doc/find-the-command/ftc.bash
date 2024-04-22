@@ -298,4 +298,5 @@ $scroll_header" \
 fi
 
 # Clean up environment
+unalias _cnf_print
 unset opt _cnf_askfirst _cnf_noprompt _cnf_noupdate _cnf_verbose
