@@ -12,6 +12,12 @@ Interactive shells have an ability to run a specified function when entered comm
 	$ cd find-the-command
 	$ makepkg -si
 
+For the [Termux](https://termux.dev):
+
+    $ git clone https://github.com/aburkivskyi/find-the-command.git
+	$ cd find-the-command
+	$ makepkg -si
+
 Alternatively, you can use yay:
 
 	$ yay -S find-the-command
